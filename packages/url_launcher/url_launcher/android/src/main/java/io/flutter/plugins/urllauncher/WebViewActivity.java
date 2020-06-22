@@ -14,6 +14,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.net.URL;
 
 /*  Launches WebView activity */
 public class WebViewActivity extends Activity {
@@ -35,31 +37,32 @@ public class WebViewActivity extends Activity {
         }
       };
 
-  private final WebViewClient webViewClient =
-      new WebViewClient() {
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-          if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            view.loadUrl(url);
-            return false;
-          }
-          return super.shouldOverrideUrlLoading(view, url);
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            view.loadUrl(request.getUrl().toString());
-          }
-          return false;
-        }
-      };
-
   private WebView webview;
 
   private IntentFilter closeIntentFilter = new IntentFilter(ACTION_CLOSE);
 
+  private WebViewClient getWebViewClient(ArrayList<String> customSchemes){
+    return new WebViewClient() {
+
+      @Override
+      public boolean shouldOverrideUrlLoading(WebView view, String url) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+          view.loadUrl(url);
+          return false;
+        }
+        final URL uri = new URL(url);
+        return customSchemes.contains(uri.getProtocol()) || super.shouldOverrideUrlLoading(view, url);
+      }
+
+      @Override
+      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+          view.loadUrl(request.getUrl().toString());
+        }
+        return false;
+      }
+    };
+  }
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -71,13 +74,14 @@ public class WebViewActivity extends Activity {
     final boolean enableJavaScript = intent.getBooleanExtra(ENABLE_JS_EXTRA, false);
     final boolean enableDomStorage = intent.getBooleanExtra(ENABLE_DOM_EXTRA, false);
     final Bundle headersBundle = intent.getBundleExtra(Browser.EXTRA_HEADERS);
+    final ArrayList<String> customSchemes = intent.getStringArrayListExtra(CUSTOM_URL_SCHEMES);
 
     final Map<String, String> headersMap = extractHeaders(headersBundle);
     webview.loadUrl(url, headersMap);
 
     webview.getSettings().setJavaScriptEnabled(enableJavaScript);
     webview.getSettings().setDomStorageEnabled(enableDomStorage);
-
+    final webViewClient = getWebViewClient(customSchemes);
     // Open new urls inside the webview itself.
     webview.setWebViewClient(webViewClient);
 
@@ -112,18 +116,20 @@ public class WebViewActivity extends Activity {
   private static String URL_EXTRA = "url";
   private static String ENABLE_JS_EXTRA = "enableJavaScript";
   private static String ENABLE_DOM_EXTRA = "enableDomStorage";
-
+  private static String CUSTOM_URL_SCHEMES = "customUrlSchemes"
   /* Hides the constants used to forward data to the Activity instance. */
   public static Intent createIntent(
       Context context,
       String url,
       boolean enableJavaScript,
       boolean enableDomStorage,
-      Bundle headersBundle) {
+      Bundle headersBundle,
+      ArrayList<String> customSchemes) {
     return new Intent(context, WebViewActivity.class)
         .putExtra(URL_EXTRA, url)
         .putExtra(ENABLE_JS_EXTRA, enableJavaScript)
         .putExtra(ENABLE_DOM_EXTRA, enableDomStorage)
-        .putExtra(Browser.EXTRA_HEADERS, headersBundle);
+        .putExtra(Browser.EXTRA_HEADERS, headersBundle)
+            .putStringArrayListExtra(CUSTOM_URL_SCHEMES, customSchemes);
   }
 }

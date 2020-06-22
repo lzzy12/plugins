@@ -8,7 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Browser;
 import androidx.annotation.Nullable;
-
+import java.util.ArrayList;
 /** Launches components for URLs. */
 class UrlLauncher {
   private final Context applicationContext;
@@ -47,6 +47,7 @@ class UrlLauncher {
    * @param useWebView when true, the URL is launched inside of {@link WebViewActivity}.
    * @param enableJavaScript Only used if {@param useWebView} is true. Enables JS in the WebView.
    * @param enableDomStorage Only used if {@param useWebView} is true. Enables DOM storage in the
+   * @param customSchemes Only used if {@param useWebView} is true. Adds support for deep-linking in the webview
    * @return {@link LaunchStatus#NO_ACTIVITY} if there's no available {@code applicationContext}.
    *     {@link LaunchStatus#OK} otherwise.
    */
@@ -55,7 +56,8 @@ class UrlLauncher {
       Bundle headersBundle,
       boolean useWebView,
       boolean enableJavaScript,
-      boolean enableDomStorage) {
+      boolean enableDomStorage,
+      ArrayList<String> customSchemes) {
     if (activity == null) {
       return LaunchStatus.NO_ACTIVITY;
     }

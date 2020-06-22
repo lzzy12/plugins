@@ -63,6 +63,7 @@ Future<bool> launch(
   bool universalLinksOnly,
   Map<String, String> headers,
   Brightness statusBarBrightness,
+  List<String> customSchemes,
 }) async {
   assert(urlString != null);
   final Uri url = Uri.parse(urlString.trimLeft());
@@ -93,6 +94,7 @@ Future<bool> launch(
     enableDomStorage: enableDomStorage ?? false,
     universalLinksOnly: universalLinksOnly ?? false,
     headers: headers ?? <String, String>{},
+    customSchemes: customSchemes ?? <String>[],
   );
   assert(previousAutomaticSystemUiAdjustment != null);
   if (statusBarBrightness != null) {
